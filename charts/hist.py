@@ -48,9 +48,7 @@ for bar in bars:
 	#bar.set_color(colors[i]) ## Pick the one you like
 	
 	x = bar.get_x()
-	
-	if i == 1:
-		i = nCols + 1
+		
 	
 	if i != nCols:
 		x = bar.get_x()
@@ -66,5 +64,5 @@ ax.legend(loc='upper center', ncol=3)
 plt.tight_layout(h_pad=10)
 
 
-#plt.axhspan(ymin, ymax)
+#plt.axhspan(ymin, ymax)			
 plt.show()
