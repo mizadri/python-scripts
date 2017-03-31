@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn
 
-seaborn.set()
+#seaborn.set()
 
 
 tb=pd.read_excel("example.xlsx")
@@ -36,11 +36,35 @@ designs['sevillana'] = '.'
 # And you can combine them
 designs['mix']='+/'
 
+nCols = len(tb.columns) - 1
+i = nCols
+colPadding = 0.02
+accPadding = colPadding
+arr = []
 for bar in bars:
-    bar.set_hatch('+/') ## Pick the one you like
-    #bar.set_color(colors[i]) ## Pick the one you like
-    
-##Don't forget to update the legend  to reflect the changes
-ax.legend(loc='center top', ncol=3) 
+		
+	bar.set_hatch('/') 
+	## Pick the one you like
+	#bar.set_color(colors[i]) ## Pick the one you like
+	
+	x = bar.get_x()
+	
+	if i == 1:
+		i = nCols + 1
+	
+	if i != nCols:
+		x = bar.get_x()
+		bar.set_x(x+accPadding)
+		accPadding += accPadding
+	else:
+		accPadding = colPadding
 
+	i -= 1
+
+##Don't forget to update the legend  to reflect the changes
+ax.legend(loc='upper center', ncol=3) 
+plt.tight_layout(h_pad=10)
+
+
+#plt.axhspan(ymin, ymax)
 plt.show()

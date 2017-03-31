@@ -2,16 +2,31 @@
 import pandas as pd
 import numpy as np
 table=pd.read_excel("spec_juno.xlsx",sheetname="data")
+csv = pd.read_csv("ctimes-juno.csv")
+
+bench_time = {}
+for raw_row in csv.iterrows():
+	i = raw_row[0]
+	row=raw_row[1]
+	bench_time[row[0]] = row[2]/1000
+
 
 bench_SF = {}
+bench_lights = {}
 workloads = []
 for raw_row in table.iterrows():
 	i = raw_row[0]
 	row=raw_row[1]
-	bench_SF[row[0].replace("L","")] = row[1]
+
+	bench_SF[row[0]] = row[1]
 
 	if pd.notnull(row[2]):
-		workloads.append([b.replace("L","").strip() for b in row[2].split(',')])
+		benchs = []
+		for b in row[2].split(','):
+			name = b.replace("L","").strip()
+			benchs.append(name)
+			bench_lights[name] = b.strip() 
+		workloads.append(benchs)
 
 # SF_variations = []
 # for w in workloads:
@@ -36,13 +51,14 @@ wdf["SF_var"] = SF_variations
 wdf["Workload"] = table.Workload
 sortedd = wdf.sort_values("SF_var", ascending=False)
 
-worklo
-
 
 for i in sortedd.index:
-	arr_str = "Workload %i: "%i
+	time = []
 	for benchmark in workloads[i]:
-		arr_str += benchmark+"(%.2f"%bench_SF[benchmark]+') '
+		bt = bench_lights[benchmark]
+		time.append(bench_time[bt]) 
+		
+	arr_str = "Workload %i (%.2f s): "% (i,max(time))
+	for benchmark in workloads[i]:
+		arr_str += bench_lights[benchmark]+"(%.2f"%bench_SF[benchmark]+') '
 	print(arr_str)
-	if i == 6:
-		break
