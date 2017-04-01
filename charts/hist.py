@@ -34,30 +34,21 @@ designs['cheetah'] = 'o'
 designs['cheetah2'] = 'O'
 designs['sevillana'] = '.'
 # And you can combine them
-designs['mix']='+/'
+designs['mix']='\/'
 
 nCols = len(tb.columns) - 1
-i = nCols
+i = 0
 colPadding = 0.02
 accPadding = colPadding
 arr = []
 for bar in bars:
-		
+	w = bar.get_width()
+	bar.set_width(w-0.02)
 	bar.set_hatch('/') 
 	## Pick the one you like
 	#bar.set_color(colors[i]) ## Pick the one you like
 	
-	x = bar.get_x()
-		
-	
-	if i != nCols:
-		x = bar.get_x()
-		bar.set_x(x+accPadding)
-		accPadding += accPadding
-	else:
-		accPadding = colPadding
 
-	i -= 1
 
 ##Don't forget to update the legend  to reflect the changes
 ax.legend(loc='upper center', ncol=3) 
