@@ -18,17 +18,19 @@ def usage(help):
 	print """Usage: %s -i data_file [options]
 ---Option List---
 -i <input-file>: Input data file(excel or csv).
+-o <output>: Output file data file(excel or csv).
 -s <sheet name>: Excel sheet to obtain the data from.
 -d <width,height>: Dimensions.
 -c <c1,c2,..,cn>: Column's names to remove.
 -p <p1,p2,..,pn> : Patterns for each column.
 -y <start,end[,step]>: ej: 1:4.20 or 1:4.20:0.1 (Increment is at the end).
 -P : Enable percentage format on y axis.
--l <ylabel>: set labels for y axis.
+-l <ylabel>: set label for y axis.
 -t <tag>: Tag that will be appended to the filename of the figure.
 -r <offset_x>: Rotate x titles by 90 degrees and apply offset to separate them from the x axis.
 -n : no key.
 -f <fontspec>
+-F <fontsize>
 -R <row_selection>
 -A : compute average.
 -h : help"""% sys.argv[0]
@@ -39,10 +41,10 @@ def usage(help):
 		exit(0)           
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "i:s:d:c:p:y:kl:t:r:n:f:R:Ah",
-											 ["input-file","sheet","dimensions","columns","patterns"
-											 ,"yrange","percentages","ylabels","tag","roffset"
-											 ,"nokey","font","rows","average","help"])
+	opts, args = getopt.getopt(sys.argv[1:], "i:o:s:d:c:p:y:Pl:t:r:nf:F:R:Ah",
+											 ["infile","outfile","sheet","dimensions","columns","patterns"
+											 ,"yrange","percentages","ylabel","tag","roffset"
+											 ,"nokey","font","fontsize","rows","average","help"])
 except getopt.GetoptError as err:
 	# print help information and exit:
 	print str(err) # will print something like "option -a not recognized"
@@ -51,17 +53,19 @@ except getopt.GetoptError as err:
 
 
 infile = "example.xlsx"
+outfile = None
 sheet = None
 figSize = [7.75,6.75]
 columns = None
 patterns = []
 yrange = None
 percentages = False
-ylabels = []
+ylabel = []
 tag = None
 roffset = 0
 nokey = False
 font = "Helvetica"
+fsize=16
 rows = []
 average = False
 
@@ -70,9 +74,11 @@ yend = None
 ystep = None
 
 for o, arg in opts:
-	if o in ("-i", "--input"):
+	if o in ("-i", "--infile"):
 		infile=arg 
-		assert os.path.isfile(infilen), "Specify an existing input file: -i example.xlsx" 
+		assert os.path.isfile(infilen), "Specify an existing input file: -i example.xlsx"
+	elif o in ("-o", "--output"):
+		outfile=arg
 	if o in ("-s", "--sheet"):
 		sheet=arg 
 	elif o in ("-d", "--dimensions"):
@@ -92,8 +98,8 @@ for o, arg in opts:
 		ystep = yrange[2]
 	elif o in ("-P", "--percentages"):
 		percentages=True
-	elif o in ("-l", "--ylabels"):
-		ylabels=arg
+	elif o in ("-l", "--ylabel"):
+		ylabel=arg
 	elif o in ("-t", "--tag"):
 		tag=arg
 	elif o in ("-r", "--roffset"):
@@ -102,6 +108,8 @@ for o, arg in opts:
 		nokey=True
 	elif o in ("-f", "--font"):
 		font=arg
+	elif o in ("-F", "--fontsize"):
+		fsize=int(arg)
 	elif o in ("-R", "--rows"):
 		rows=arg
 	elif o in ("-A", "--average"):
@@ -134,7 +142,14 @@ if columns:
 if yrange:
 	plt.yticks(np.arrange(ystart,yend,ystep))
 
+if ylabel:
+	plt.ylabel(ylabel)
 
+rcParams['font.family'] = font
+rcParams['xtick.labelsize'] = fsize
+rcParams['ytick.labelsize'] = fsize
+rcParams['legend.fontsize'] = fsize
+rcParams['grid.linewidth']= 1.0
 
 # vals = ax.get_yticks()
 # ax.set_yticklabels(['{:3.2f}%'.format(x) for x in np.linspace(0,100,len(vals))])
@@ -178,3 +193,8 @@ ax.legend(loc='upper center', ncol=nCols)
 
 #plt.axhspan(ymin, ymax)			
 plt.show()
+
+if tag:
+	outfile = "%s.%s.pdf"%(outfile.split(".")[0],tag)
+
+plt.figure().savefig(outfile, bbox_inches='tight')
