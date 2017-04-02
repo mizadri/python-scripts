@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.markers import *
+import matplotlib.font_manager as fm
+#import matplotlib
 import sys
 import re
 import getopt
@@ -63,10 +65,11 @@ ylabel = []
 tag = None
 roffset = 0
 nokey = False
-font = "Helvetica"
-fsize=16
+font = "sans-serif"
+fsize=12
 rows = []
 average = False
+helvetica_path = '/usr/share/matplotlib/mpl-data/fonts/pdfcorefonts/Courier.afm'
 
 ystart = None
 yend = None
@@ -147,11 +150,20 @@ ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange)
 if ylabel:
 	plt.ylabel(ylabel)
 
-rcParams['font.family'] = font
-rcParams['xtick.labelsize'] = fsize
-rcParams['ytick.labelsize'] = fsize
-rcParams['legend.fontsize'] = fsize
-rcParams['grid.linewidth']= 1.0
+
+# helvetica = {'fontname':font}
+#plt.xlable('Workloads', **helvetica)
+#plt.title('Unfairness Factor', **helvetica)
+plt.title('Unfairness Factor')
+
+#prop = fm.FontProperties(fname=helvetica_path)
+
+#rcParams['font.family'] = "{'fontname':%s}"%font
+plt.rcParams['font.family'] = font
+plt.rcParams['xtick.labelsize'] = fsize
+plt.rcParams['ytick.labelsize'] = fsize
+plt.rcParams['legend.fontsize'] = fsize
+plt.rcParams['grid.linewidth']= 1.0
 
 # vals = ax.get_yticks()
 # ax.set_yticklabels(['{:3.2f}%'.format(x) for x in np.linspace(0,100,len(vals))])
