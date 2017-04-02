@@ -2,7 +2,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib 
 from matplotlib.markers import *
 import sys
 import re
@@ -22,7 +21,7 @@ def usage(help):
 -s <sheet name>: Excel sheet to obtain the data from.
 -d <width,height>: Dimensions.
 -c <c1,c2,..,cn>: Column's names to remove.
--p <p1,p2,..,pn> : Patterns for each column.
+-p <p1,p2,..,pn> : Patterns for each column( #ffffff:/,#aaaaaa:\,... )
 -y <start,end[,step]>: ej: 1:4.20 or 1:4.20:0.1 (Increment is at the end).
 -P : Enable percentage format on y axis.
 -l <ylabel>: set label for y axis.
@@ -55,7 +54,7 @@ except getopt.GetoptError as err:
 infile = "example.xlsx"
 outfile = None
 sheet = None
-figSize = [7.75,6.75]
+figSize = [10.75,6.75]
 columns = None
 patterns = []
 yrange = None
@@ -72,7 +71,7 @@ average = False
 ystart = None
 yend = None
 ystep = None
-
+ 
 for o, arg in opts:
 	if o in ("-i", "--infile"):
 		infile=arg 
@@ -96,6 +95,7 @@ for o, arg in opts:
 		ystart = yrange[0]
 		yend = yrange[1]
 		ystep = yrange[2]
+		yrange = np.arange(ystart,yend,ystep)
 	elif o in ("-P", "--percentages"):
 		percentages=True
 	elif o in ("-l", "--ylabel"):
@@ -128,19 +128,21 @@ else:
 	else:
 		table=pd.read_excel(infile)
 
-nCols = len(table.columns) - 1
+if average:
+	average = table.mean()
+	average.name = "Average"
+	table = table.append(average)
 
-# Create the plot
-ax=table.plot(kind='bar')
-plt.figure(figsize=figSize)
+
+nCols = len(table.columns) - 1
 
 # Filter columbs by name
 if columns:
 	table.drop(columns,axis=1,inplace=True)
 	nCols -= len(columns)
 
-if yrange:
-	plt.yticks(np.arrange(ystart,yend,ystep))
+# Create the plot
+ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange)
 
 if ylabel:
 	plt.ylabel(ylabel)
@@ -158,8 +160,7 @@ rcParams['grid.linewidth']= 1.0
 ax.set_xticklabels(table.ix[:,0].values,rotation=0)
 
 
-bars=ax.patches
-patterns = ('-', 'x', '\\', '\\\\', '.', '/','//','///')
+nice_patterns = ('/', '\\', '.', '-', 'x', '\\\\' ,'//','///')
 designs = {}
 designs['h_line'] = '-'
 designs['squares'] = '+' # A bit random, they look crosses or sometimes lines 
@@ -176,25 +177,31 @@ designs['sevillana'] = '.'
 designs['mix']='\/'
 
 
+bars=ax.patches
 
 #Set hatches and/or colors as desired in bars ...
 arr = []
+i = 0
 for bar in bars:
 	w = bar.get_width()
 	bar.set_width(w-0.02)
-	bar.set_hatch('/') 
-	## Pick the one you like
-	#bar.set_color(colors[i]) ## Pick the one you like
-	
-
+	if patterns:
+		bar.set_hatch(patterns[i%nCols][1]) 
+		## Pick the one you like
+		bar.set_color(patterns[i%nCols][0]) ## Pick the one you like
+	else:
+		bar.set_hatch(nice_patterns[i%nCols])
+	i += 1
 
 ##Don't forget to update the legend  to reflect the changes
 ax.legend(loc='upper center', ncol=nCols) 
 
-#plt.axhspan(ymin, ymax)			
 plt.show()
+
+if not outfile:
+	outfile = infile.split(".")[0] + ".pdf"
 
 if tag:
 	outfile = "%s.%s.pdf"%(outfile.split(".")[0],tag)
 
-plt.figure().savefig(outfile, bbox_inches='tight')
+#plt.savefig(outfile, bbox_inches='tight')
