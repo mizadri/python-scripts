@@ -147,7 +147,7 @@ if columns:
 	nCols -= len(columns)
 
 # Create the plot
-ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange)
+ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange, edgecolor='black',)
 
 if ylabel:
 	plt.ylabel(ylabel)
@@ -166,6 +166,7 @@ plt.rcParams['xtick.labelsize'] = fsize
 plt.rcParams['ytick.labelsize'] = fsize
 plt.rcParams['legend.fontsize'] = fsize
 plt.rcParams['grid.linewidth']= 1.0
+#plt.rcParams['hatch.linewidth']= 2.0
 
 # vals = ax.get_yticks()
 # ax.set_yticklabels(['{:3.2f}%'.format(x) for x in np.linspace(0,100,len(vals))])
@@ -221,7 +222,6 @@ for bar in bars:
 ##Don't forget to update the legend  to reflect the changes
 ax.legend(loc='upper right', ncol=nCols) 
 
-plt.show()
 
 if not outfile:
 	outfile = infile.split(".")[0] + ".pdf"
@@ -229,4 +229,10 @@ if not outfile:
 if tag:
 	outfile = "%s.%s.pdf"%(outfile.split(".")[0],tag)
 
+
 plt.savefig(outfile, bbox_inches='tight')
+
+plt.show()
+
+plt.close()
+
