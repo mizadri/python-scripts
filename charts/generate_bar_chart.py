@@ -4,14 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.markers import *
 import matplotlib.font_manager as fm
-#import matplotlib
 import sys
 import re
 import getopt
 import os.path
 
-#import seaborn
-#seaborn.set()
+# Problems detecting fonts
+# Edit file: subl ~/anaconda2/lib/python2.7/site-packages/matplotlib/mpl-data/matplotlibrc
+# Remove font cache(reloads config file when started): sudo rm -rf ~/.cache/matplotlib/
+
 
 # -p p1,p2,p3,..,pn : Patterns for each column ---> '#cccccc:/,...."
 # -y y-range: ej: 1:4.20 or 1:4.20:0.1 (Increment is at the end) ----> yticks_fixed=np.arange(0,1.1,0.1)
@@ -69,7 +70,6 @@ font = "sans-serif"
 fsize=12
 rows = []
 average = False
-helvetica_path = '/usr/share/matplotlib/mpl-data/fonts/pdfcorefonts/Helvetica.afm'
 
 ystart = None
 yend = None
@@ -146,6 +146,12 @@ if columns:
 	table.drop(columns,axis=1,inplace=True)
 	nCols -= len(columns)
 
+# for presentation use:
+# plt.style.use('presentation')
+# for papers use:
+# plt.style.use('grayscale')
+
+
 # Create the plot
 ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange, edgecolor='black',)
 
@@ -153,20 +159,38 @@ if ylabel:
 	plt.ylabel(ylabel)
 
 
-# helvetica = {'fontname':font}
+#helvetica = {'fontname':font}
 #plt.xlable('Workloads', **helvetica)
 #plt.title('Unfairness Factor', **helvetica)
 plt.title('Unfairness Factor')
 
-#prop = fm.FontProperties(fname=helvetica_path)
+#To load a specific font
+#font_path="ruta"
+#prop = fm.FontProperties(fname=font_path)
+#font = prop.get_name()
+
+#To install a new font
+# 1. Copy .ttf to matplotlib instalation:
+	# cp ~/Downloads/Helvetica.ttf ~/anaconda2/lib/python2.7/site-packages/matplotlib/mpl-data/fonts/ttf/
+# 2. Set configuration in matplotlibrc file (two last steps set the new font to default):
+	#   uncomment and set:
+	# pdf.fonttype       : 42
+	# ps.fonttype       : 42
+	# font.family         : sans-serif
+	# font.sans-serif     : Helvetica, DejaVu Sans, Bitstream Vera Sans, Lucida Grande, Verdana, Geneva, Lucid, Arial, Avant Garde, sans-serif
+# 3. Wipe matplotlib cache to reload it the next time it executes
+	# sudo rm -rf ~/.cache/matplotlib/
 
 #rcParams['font.family'] = "{'fontname':%s}"%font
-plt.rcParams['font.family'] = font
+plt.rcParams['font.family'] = "Helvetica"
+#plt.rcParams['font.variant'] = font
 plt.rcParams['xtick.labelsize'] = fsize
 plt.rcParams['ytick.labelsize'] = fsize
 plt.rcParams['legend.fontsize'] = fsize
 plt.rcParams['grid.linewidth']= 1.0
 #plt.rcParams['hatch.linewidth']= 2.0
+
+
 
 # vals = ax.get_yticks()
 # ax.set_yticklabels(['{:3.2f}%'.format(x) for x in np.linspace(0,100,len(vals))])
