@@ -4,3 +4,4 @@
 
 * **workload-selection** contains a script that reads an excel using pandas an returns the 5 workloads with the greatest variance in the Speedup Factor of its applications.
 
+* **charts** different kinds of charts using matplotlib.

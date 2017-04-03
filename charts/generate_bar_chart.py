@@ -26,6 +26,7 @@ def usage(help):
 -c <c1,c2,..,cn>: Column's names to remove.
 -p <p1,p2,..,pn> : Patterns for each column( #ffffff:/,#aaaaaa:\,... )
 -y <start,end[,step]>: ej: 1:4.20 or 1:4.20:0.1 (Increment is at the end).
+-L <limstart,limend>: Specify limits for y axe.
 -P : Enable percentage format on y axis.
 -l <ylabel>: set label for y axis.
 -t <tag>: Tag that will be appended to the filename of the figure.
@@ -43,9 +44,9 @@ def usage(help):
 		exit(0)
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "i:o:s:d:c:p:y:Pl:t:r:nf:F:R:Ah",
+	opts, args = getopt.getopt(sys.argv[1:], "i:o:s:d:c:p:y:L:Pl:t:r:nf:F:R:Ah",
 											 ["infile","outfile","sheet","dimensions","columns","patterns"
-											 ,"yrange","percentages","ylabel","tag","roffset"
+											 ,"yrange","percentages","ylabel","ylims","tag","roffset"
 											 ,"nokey","font","fontsize","rows","average","help"])
 except getopt.GetoptError as err:
 	# print help information and exit:
@@ -61,15 +62,17 @@ figSize = [10.75,6.75]
 columns = None
 patterns = []
 yrange = None
+ylims = None
 percentages = False
 ylabel = []
 tag = None
 roffset = 0
 nokey = False
-font = "sans-serif"
+font = "Helvetica"
 fsize=12
 rows = []
 average = False
+
 
 ystart = None
 yend = None
@@ -99,6 +102,9 @@ for o, arg in opts:
 		yend = yrange[1]
 		ystep = yrange[2]
 		yrange = np.arange(ystart,yend,ystep)
+	elif o in ("-L", "--ylims"):
+		ylims=arg.split(",")
+		assert len(ylims) == 2, "lim for y axe should be components: -L 3,4"
 	elif o in ("-P", "--percentages"):
 		percentages=True
 	elif o in ("-l", "--ylabel"):
@@ -160,6 +166,10 @@ if ylabel:
 
 
 plt.title('Unfairness Factor')
+plt.axis("tight")
+plt.grid(True)
+if ylims:
+	plt.ylim(float(ylims[0]),float(ylims[1]))
 
 #To install a new font
 # 1. Copy .ttf to matplotlib instalation(mine is inside anaconda):
