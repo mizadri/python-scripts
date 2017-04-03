@@ -159,18 +159,10 @@ if ylabel:
 	plt.ylabel(ylabel)
 
 
-#helvetica = {'fontname':font}
-#plt.xlable('Workloads', **helvetica)
-#plt.title('Unfairness Factor', **helvetica)
 plt.title('Unfairness Factor')
 
-#To load a specific font
-#font_path="ruta"
-#prop = fm.FontProperties(fname=font_path)
-#font = prop.get_name()
-
 #To install a new font
-# 1. Copy .ttf to matplotlib instalation:
+# 1. Copy .ttf to matplotlib instalation(mine is inside anaconda):
 	# cp ~/Downloads/Helvetica.ttf ~/anaconda2/lib/python2.7/site-packages/matplotlib/mpl-data/fonts/ttf/
 # 2. Set configuration in matplotlibrc file (two last steps set the new font to default):
 	#   uncomment and set:
@@ -181,14 +173,11 @@ plt.title('Unfairness Factor')
 # 3. Wipe matplotlib cache to reload it the next time it executes
 	# sudo rm -rf ~/.cache/matplotlib/
 
-#rcParams['font.family'] = "{'fontname':%s}"%font
 plt.rcParams['font.family'] = "Helvetica"
-#plt.rcParams['font.variant'] = font
 plt.rcParams['xtick.labelsize'] = fsize
 plt.rcParams['ytick.labelsize'] = fsize
 plt.rcParams['legend.fontsize'] = fsize
 plt.rcParams['grid.linewidth']= 1.0
-#plt.rcParams['hatch.linewidth']= 2.0
 
 
 
@@ -216,18 +205,13 @@ designs['sevillana'] = '.'
 # And you can combine them
 designs['mix']='\/'
 
-
-bars=ax.patches
-
-
 #Set hatches and/or colors as desired in bars ...
+bars=ax.patches
 count = 0
 i = 0
 # Caution: bars are not ordered as you see on the figure. You get the first n columns, then the 2nd n columns..
 for bar in bars:
 
-	#print count
-	#print bar.get_height()
 	w = bar.get_width()
 	bar.set_width(w-0.02)
 	if patterns:
