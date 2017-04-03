@@ -20,7 +20,7 @@ def usage(help):
 ---Option List---
 -i <input-file>: Input data file(excel or csv).
 -o <output>: Output file data file(excel or csv).
--s <sheet name>: Excel sheet to obtain the data from.
+-s <sheet-name>: Excel sheet to obtain the data from.
 -d <width,height>: Dimensions.
 -c <c1,c2,..,cn>: Column's names to remove.
 -p <p1,p2,..,pn> : Patterns for each column( #ffffff:/,#aaaaaa:\,... )
@@ -28,7 +28,7 @@ def usage(help):
 -P : Enable percentage format on y axis.
 -l <ylabel>: set label for y axis.
 -t <tag>: Tag that will be appended to the filename of the figure.
--r <offset_x>: Rotate x titles by 90 degrees and apply offset to separate them from the x axis.
+-r <roffset_x>: Rotate x titles by 90 degrees and apply offset to separate them from the x axis.
 -n : no key.
 -f <fontspec>
 -F <fontsize>
@@ -39,7 +39,7 @@ def usage(help):
 	if not help:
 		exit(1)
 	else:
-		exit(0)           
+		exit(0)
 
 try:
 	opts, args = getopt.getopt(sys.argv[1:], "i:o:s:d:c:p:y:Pl:t:r:nf:F:R:Ah",
@@ -69,19 +69,19 @@ font = "sans-serif"
 fsize=12
 rows = []
 average = False
-helvetica_path = '/usr/share/matplotlib/mpl-data/fonts/pdfcorefonts/Courier.afm'
+helvetica_path = '/usr/share/matplotlib/mpl-data/fonts/pdfcorefonts/Helvetica.afm'
 
 ystart = None
 yend = None
 ystep = None
- 
+
 for o, arg in opts:
 	if o in ("-i", "--infile"):
 		infile=arg 
 		assert os.path.isfile(infilen), "Specify an existing input file: -i example.xlsx"
 	elif o in ("-o", "--output"):
 		outfile=arg
-	if o in ("-s", "--sheet"):
+	elif o in ("-s", "--sheet"):
 		sheet=arg 
 	elif o in ("-d", "--dimensions"):
 		figSize = [float(d) for d in arg.split(',')]
@@ -117,7 +117,7 @@ for o, arg in opts:
 		rows=arg
 	elif o in ("-A", "--average"):
 		average=True
-	if o in ("-h", "--help"):
+	elif o in ("-h", "--help"):
 		usage(True)
 		sys.exit()
 	else:
@@ -132,12 +132,14 @@ else:
 		table=pd.read_excel(infile)
 
 if average:
-	average = table.mean()
-	average.name = "Average"
-	table = table.append(average)
+	means = table.mean()
+	workload_field = table.columns[0]
+	means[workload_field] = "Average"
+	table = table.append(means, ignore_index=True)
 
 
 nCols = len(table.columns) - 1
+nRows = len(table)
 
 # Filter columbs by name
 if columns:
@@ -172,7 +174,8 @@ plt.rcParams['grid.linewidth']= 1.0
 ax.set_xticklabels(table.ix[:,0].values,rotation=0)
 
 
-nice_patterns = ('/', '\\', '.', '-', 'x', '\\\\' ,'//','///')
+#nice_patterns = ('/', '\\', '.', '-', 'x', '\\\\' ,'//','///')
+nice_patterns = ('/', '-', '\\')
 designs = {}
 designs['h_line'] = '-'
 designs['squares'] = '+' # A bit random, they look crosses or sometimes lines 
@@ -191,10 +194,15 @@ designs['mix']='\/'
 
 bars=ax.patches
 
+
 #Set hatches and/or colors as desired in bars ...
-arr = []
+count = 0
 i = 0
+# Caution: bars are not ordered as you see on the figure. You get the first n columns, then the 2nd n columns..
 for bar in bars:
+
+	#print count
+	#print bar.get_height()
 	w = bar.get_width()
 	bar.set_width(w-0.02)
 	if patterns:
@@ -203,10 +211,15 @@ for bar in bars:
 		bar.set_color(patterns[i%nCols][0]) ## Pick the one you like
 	else:
 		bar.set_hatch(nice_patterns[i%nCols])
-	i += 1
+	
+	count += 1
+
+	if count == nRows:
+		count = 0
+		i += 1
 
 ##Don't forget to update the legend  to reflect the changes
-ax.legend(loc='upper center', ncol=nCols) 
+ax.legend(loc='upper right', ncol=nCols) 
 
 plt.show()
 
@@ -216,4 +229,4 @@ if not outfile:
 if tag:
 	outfile = "%s.%s.pdf"%(outfile.split(".")[0],tag)
 
-#plt.savefig(outfile, bbox_inches='tight')
+plt.savefig(outfile, bbox_inches='tight')

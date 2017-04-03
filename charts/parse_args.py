@@ -34,10 +34,10 @@ for o, arg in opts:
 			print "The dimmension has to be expressed in this format: 'x,y'"
 			exit(1)
 	elif o in ("-M", "--metric-file"):
-		metricFile=arg
+		metricFile=True
 	elif o in ("-b", "--bypass"):
 		bypass=True        	
 	else:
 		assert False, "unhandled option"
 
-print figSize
+print metricFile
