@@ -149,28 +149,19 @@ nRows = len(table)
 
 # Filter columbs by name
 if columns:
-	table.drop(columns,axis=1,inplace=True)
-	nCols -= len(columns)
+	nCols = len(columns)
+	colnames = table.columns[1:]
+	array = []
+	for col in colnames:
+		if col not in columns:
+			array.append(col)
+
+	table.drop(array,axis=1,inplace=True)
 
 # for presentation use:
 # plt.style.use('presentation')
 # for papers use:
-# plt.style.use('grayscale')
-
-
-# Create the plot
-ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange, edgecolor='black',)
-
-if ylabel:
-	plt.ylabel(ylabel)
-
-
-plt.title('Unfairness Factor')
-plt.axis("tight")
-plt.grid(True)
-if ylims:
-	plt.ylim(float(ylims[0]),float(ylims[1]))
-
+#plt.style.use('grayscale')
 #To install a new font
 # 1. Copy .ttf to matplotlib instalation(mine is inside anaconda):
 	# cp ~/Downloads/Helvetica.ttf ~/anaconda2/lib/python2.7/site-packages/matplotlib/mpl-data/fonts/ttf/
@@ -182,17 +173,38 @@ if ylims:
 	# font.sans-serif     : Helvetica, DejaVu Sans, Bitstream Vera Sans, Lucida Grande, Verdana, Geneva, Lucid, Arial, Avant Garde, sans-serif
 # 3. Wipe matplotlib cache to reload it the next time it executes
 	# sudo rm -rf ~/.cache/matplotlib/
-
-plt.rcParams['font.family'] = "Helvetica"
+plt.rcParams['ps.useafm'] = True
+plt.rcParams['pdf.use14corefonts'] = True
+plt.rcParams['text.usetex'] = True #Let TeX do the typsetting
+plt.rcParams['text.latex.preamble'] = [r'\usepackage{sansmath}', r'\sansmath'] #Force sans-serif math mode (for axes labels)
+plt.rcParams['font.family'] = 'sans-serif' # ... for regular text
+plt.rcParams['font.sans-serif'] = 'Helvetica' #'Helvetica, Avant Garde, Computer Modern Sans serif'
 plt.rcParams['xtick.labelsize'] = fsize
 plt.rcParams['ytick.labelsize'] = fsize
 plt.rcParams['legend.fontsize'] = fsize
 plt.rcParams['grid.linewidth']= 1.0
+plt.rcParams['ytick.major.pad']= 8
 
 
+# Create the plot
+ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange, edgecolor='black',)
 
-# vals = ax.get_yticks()
+if ylabel:
+	plt.ylabel(ylabel)
+
+
+plt.title('Unfairness Factor')
+plt.axis("tight")
+ax.grid(True,linestyle='dotted')
+
+if ylims:
+	plt.ylim(float(ylims[0]),float(ylims[1]))
+
+
+vals = ax.get_yticks()
 # ax.set_yticklabels(['{:3.2f}%'.format(x) for x in np.linspace(0,100,len(vals))])
+if percentages:
+	ax.set_yticklabels(['{:3.0f%}%'.format(int(x)) for x in np.linspace(0,100,len(vals))])
 
 #Set labels using column #0 (The rotation is important)
 ax.set_xticklabels(table.ix[:,0].values,rotation=0)
@@ -238,11 +250,16 @@ for bar in bars:
 		i += 1
 
 ##Don't forget to update the legend  to reflect the changes
-ax.legend(loc='upper right', ncol=nCols) 
 
+legend = ax.legend(loc='upper right', ncol=nCols) 
+if nokey:
+	legend.remove()
 
 if not outfile:
-	outfile = infile.split(".")[0] + ".pdf"
+	if sheet:
+		outfile = sheet + ".pdf"
+	else:
+		outfile = infile.split(".")[0] + ".pdf"
 
 if tag:
 	outfile = "%s.%s.pdf"%(outfile.split(".")[0],tag)
