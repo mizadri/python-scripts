@@ -13,7 +13,6 @@ import os.path
 # Edit file: subl ~/anaconda2/lib/python2.7/site-packages/matplotlib/mpl-data/matplotlibrc
 # Remove font cache(reloads config file when started): sudo rm -rf ~/.cache/matplotlib/
 
-
 # -p p1,p2,p3,..,pn : Patterns for each column ---> '#cccccc:/,...."
 # -y y-range: ej: 1:4.20 or 1:4.20:0.1 (Increment is at the end) ----> yticks_fixed=np.arange(0,1.1,0.1)
 def usage(help):
@@ -23,18 +22,18 @@ def usage(help):
 -o <output>: Output file data file(excel or csv).
 -s <sheet-name>: Excel sheet to obtain the data from.
 -d <width,height>: Dimensions.
--c <c1,c2,..,cn>: Column's names to remove.
+-c <1-4,7->: Column's ix to remove(start at 1 to exclude Workload name field).
 -p <p1,p2,..,pn> : Patterns for each column( #ffffff:/,#aaaaaa:\,... )
 -y <start,end[,step]>: ej: 1:4.20 or 1:4.20:0.1 (Increment is at the end).
 -L <limstart,limend>: Specify limits for y axe.
 -P : Enable percentage format on y axis.
 -l <ylabel>: set label for y axis.
 -t <tag>: Tag that will be appended to the filename of the figure.
--r <roffset_x>: Rotate x titles by 90 degrees and apply offset to separate them from the x axis.
+-r <roffset_x>: (maybe not needed)Rotate x titles by 90 degrees and apply offset to separate them from the x axis.
 -n : no key.
 -f <fontspec>
 -F <fontsize>
--R <row_selection>
+-R <1-4,7-> Rows ix to remove, starts at 0(columns' names does not count).
 -A : compute average.
 -h : help"""% sys.argv[0]
 
@@ -54,7 +53,6 @@ except getopt.GetoptError as err:
 	usage(False)
 	sys.exit(2)
 
-
 infile = "example.xlsx"
 outfile = None
 sheet = None
@@ -64,15 +62,14 @@ patterns = []
 yrange = None
 ylims = None
 percentages = False
-ylabel = []
+ylabel = None
 tag = None
 roffset = 0
 nokey = False
 font = "Helvetica"
 fsize=12
-rows = []
+rows = None
 average = False
-
 
 ystart = None
 yend = None
@@ -120,7 +117,7 @@ for o, arg in opts:
 	elif o in ("-F", "--fontsize"):
 		fsize=int(arg)
 	elif o in ("-R", "--rows"):
-		rows=arg
+		rows=arg.split(',')
 	elif o in ("-A", "--average"):
 		average=True
 	elif o in ("-h", "--help"):
@@ -143,20 +140,54 @@ if average:
 	means[workload_field] = "Average"
 	table = table.append(means, ignore_index=True)
 
-
-nCols = len(table.columns) - 1
+nWCols = len(table.columns) - 1
+nCols = len(table.columns)
 nRows = len(table)
 
-# Filter columbs by name
-if columns:
-	nCols = len(columns)
-	colnames = table.columns[1:]
-	array = []
-	for col in colnames:
-		if col not in columns:
-			array.append(col)
+ix_rows = range(len(table))
+ix_columns = range(len(table.columns))
 
-	table.drop(array,axis=1,inplace=True)
+# Filter rows by string like -1,3-4,7,9-
+if rows:
+	ix_rows = []
+	for rang in rows:
+		if '-' in rang:
+			last_pos = len(rang)-1
+			g_pos = rang.find('-')
+			num = rang.strip('-')
+			if g_pos == 0:
+				ix_rows += [i for i in range(int(num)+1)]
+			elif g_pos == last_pos:
+				ix_rows += [i for i in range(int(num),nRows)]
+			else:
+				start, end = rang.split('-')
+				ix_rows += [i for i in range(int(start),int(end)+1)]
+		else:
+			ix_rows += [int(rang)]
+
+# Filter columns by string like -1,3-4,7,9-
+if columns:
+	ix_columns = []
+	for rang in columns:
+		if '-' in rang:
+			last_pos = len(rang)-1
+			g_pos = rang.find('-')
+			num = rang.strip('-')
+			if g_pos == 0:
+				ix_columns += [i for i in range(int(num)+1)]
+			elif g_pos == last_pos:
+				ix_columns += [i for i in range(int(num),nCols)]
+			else:
+				start, end = rang.split('-')
+				ix_columns += [i for i in range(int(start),int(end)+1)]
+		else:
+			ix_columns += [int(rang)]
+
+table = table.iloc[ix_rows,ix_columns]
+# Update attributes used for later processing
+nWCols = len(table.columns) - 1
+nCols = len(table.columns)
+nRows = len(table)
 
 # for presentation use:
 # plt.style.use('presentation')
@@ -183,32 +214,33 @@ plt.rcParams['xtick.labelsize'] = fsize
 plt.rcParams['ytick.labelsize'] = fsize
 plt.rcParams['legend.fontsize'] = fsize
 plt.rcParams['grid.linewidth']= 1.0
-plt.rcParams['ytick.major.pad']= 8
-
+if percentages:
+	plt.rcParams['ytick.major.pad']= 4
 
 # Create the plot
 ax=table.plot(kind='bar',figsize=figSize,  yticks=yrange, edgecolor='black',)
 
+roffset = 0.5
 if ylabel:
 	plt.ylabel(ylabel)
 
-
-plt.title('Unfairness Factor')
+#plt.title('Unfairness Factor')
 plt.axis("tight")
 ax.grid(True,linestyle='dotted')
 
 if ylims:
 	plt.ylim(float(ylims[0]),float(ylims[1]))
 
-
-vals = ax.get_yticks()
-# ax.set_yticklabels(['{:3.2f}%'.format(x) for x in np.linspace(0,100,len(vals))])
 if percentages:
-	ax.set_yticklabels(['{:3.0f%}%'.format(int(x)) for x in np.linspace(0,100,len(vals))])
+	# Only 4 ticks
+	# ax.set_yticks([0,25,50,75,100])
+	ax.set_yticklabels(['{:3.0f} %'.format(x) for x in np.linspace(0,100,5)])
+	vals = ax.get_yticks()
+	labs = ['{:3.0f}\%'.format(x) for x in vals]
+	ax.set_yticklabels(labs)
 
 #Set labels using column #0 (The rotation is important)
 ax.set_xticklabels(table.ix[:,0].values,rotation=0)
-
 
 #nice_patterns = ('/', '\\', '.', '-', 'x', '\\\\' ,'//','///')
 nice_patterns = ('/', '-', '\\')
@@ -237,11 +269,11 @@ for bar in bars:
 	w = bar.get_width()
 	bar.set_width(w-0.02)
 	if patterns:
-		bar.set_hatch(patterns[i%nCols][1]) 
+		bar.set_hatch(patterns[i%nWCols][1]) 
 		## Pick the one you like
-		bar.set_color(patterns[i%nCols][0]) ## Pick the one you like
+		bar.set_color(patterns[i%nWCols][0]) ## Pick the one you like
 	else:
-		bar.set_hatch(nice_patterns[i%nCols])
+		bar.set_hatch(nice_patterns[i%nWCols])
 	
 	count += 1
 
@@ -250,8 +282,7 @@ for bar in bars:
 		i += 1
 
 ##Don't forget to update the legend  to reflect the changes
-
-legend = ax.legend(loc='upper right', ncol=nCols) 
+legend = ax.legend(loc='upper right', ncol=nWCols) 
 if nokey:
 	legend.remove()
 
@@ -264,10 +295,6 @@ if not outfile:
 if tag:
 	outfile = "%s.%s.pdf"%(outfile.split(".")[0],tag)
 
-
 plt.savefig(outfile, bbox_inches='tight')
-
 plt.show()
-
 plt.close()
-
